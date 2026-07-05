@@ -1,6 +1,6 @@
 # 🗺️ SpatialRAG — NYC Hydrant Density Analyzer
 
-SpatialRAG is an interactive **spatial retrieval-augmented generation (RAG)** application built with Streamlit, GeoPandas, and OpenAI. It allows users to ask complex, natural-language questions about New York City neighborhood fire hydrant density, translates those questions into structured spatial query plans, runs the analysis using high-performance vector/geometric operations, and displays the results on an interactive Folium map.
+SpatialRAG is an interactive **spatial retrieval-augmented generation (RAG)** application built with Streamlit, GeoPandas, and LLM(OpenAI). It allows users to ask complex, natural-language questions about New York City neighborhood fire hydrant density, translates those questions into structured spatial query plans, runs the analysis using high-performance vector/geometric operations, and displays the results on an interactive Folium map.
 
 ---
 
@@ -34,7 +34,7 @@ SpatialRAG is an interactive **spatial retrieval-augmented generation (RAG)** ap
 
 1.  **Clone this repository** (or download the files):
     ```bash
-    git clone https://github.com/kollaSrinivas369/spatial-rag-nyc
+    git clone https://github.com/kollaSrinivas369/spatial-rag-nyc.git
     cd spatial_rag
     ```
 
@@ -56,7 +56,7 @@ SpatialRAG is an interactive **spatial retrieval-augmented generation (RAG)** ap
     ```
     Open `.env` and fill in your key:
     ```env
-    OPENAI_API_KEY=sk-proj-YourActualOpenAIKeyHere...
+    OPENAI_API_KEY=YourActualOpenAIKeyHere...
     ```
 
 5.  **Run the application**:
