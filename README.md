@@ -34,7 +34,7 @@ SpatialRAG is an interactive **spatial retrieval-augmented generation (RAG)** ap
 
 1.  **Clone this repository** (or download the files):
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/kollaSrinivas369/spatial-rag-nyc
     cd spatial_rag
     ```
 
