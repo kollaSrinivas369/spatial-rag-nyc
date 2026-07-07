@@ -70,43 +70,51 @@ def execute_query_plan(gdf: gpd.GeoDataFrame, plan: dict) -> dict:
         op_type = spatial_op.get("type")
 
         if op_type == "nearest":
-            lat, lon = spatial_op["lat"], spatial_op["lon"]
-            n = spatial_op.get("n", 5)
-            center_point = (lat, lon)
-            result = _nearest(result, lat, lon, n)
-            answer_context["spatial_desc"] = (
-                f"nearest {n} neighborhoods to ({lat:.4f}, {lon:.4f})"
-            )
+            lat = spatial_op.get("lat")
+            lon = spatial_op.get("lon")
+            if lat is not None and lon is not None:
+                n = spatial_op.get("n")
+                if n is None:
+                    n = 5
+                center_point = (lat, lon)
+                result = _nearest(result, lat, lon, n)
+                answer_context["spatial_desc"] = (
+                    f"nearest {n} neighborhoods to ({lat:.4f}, {lon:.4f})"
+                )
 
         elif op_type == "within_distance":
-            lat, lon = spatial_op["lat"], spatial_op["lon"]
-            distance_km = spatial_op["distance_km"]
-            center_point = (lat, lon)
-            result, buffer_geom = _within_distance(result, lat, lon, distance_km)
-            overlay_geoms.append(buffer_geom)
-            answer_context["spatial_desc"] = (
-                f"within {distance_km} km of ({lat:.4f}, {lon:.4f})"
-            )
+            lat = spatial_op.get("lat")
+            lon = spatial_op.get("lon")
+            distance_km = spatial_op.get("distance_km")
+            if lat is not None and lon is not None and distance_km is not None:
+                center_point = (lat, lon)
+                result, buffer_geom = _within_distance(result, lat, lon, distance_km)
+                overlay_geoms.append(buffer_geom)
+                answer_context["spatial_desc"] = (
+                    f"within {distance_km} km of ({lat:.4f}, {lon:.4f})"
+                )
 
         elif op_type == "within_polygon":
-            polygon_coords = spatial_op["polygon"]  # [[lon, lat], ...]
-            result, poly_geom = _within_polygon(result, polygon_coords)
-            overlay_geoms.append(poly_geom)
-            answer_context["spatial_desc"] = "within drawn polygon"
+            polygon_coords = spatial_op.get("polygon")  # [[lon, lat], ...]
+            if polygon_coords:
+                result, poly_geom = _within_polygon(result, polygon_coords)
+                overlay_geoms.append(poly_geom)
+                answer_context["spatial_desc"] = "within drawn polygon"
 
         elif op_type == "buffer":
-            neighborhood_name = spatial_op["neighborhood"]
-            distance_km = spatial_op["distance_km"]
-            result, buffer_geom, center = _buffer_neighborhood(
-                gdf, result, neighborhood_name, distance_km
-            )
-            if buffer_geom:
-                overlay_geoms.append(buffer_geom)
-            if center:
-                center_point = center
-            answer_context["spatial_desc"] = (
-                f"within {distance_km} km of {neighborhood_name}"
-            )
+            neighborhood_name = spatial_op.get("neighborhood")
+            distance_km = spatial_op.get("distance_km")
+            if neighborhood_name and distance_km is not None:
+                result, buffer_geom, center = _buffer_neighborhood(
+                    gdf, result, neighborhood_name, distance_km
+                )
+                if buffer_geom:
+                    overlay_geoms.append(buffer_geom)
+                if center:
+                    center_point = center
+                answer_context["spatial_desc"] = (
+                    f"within {distance_km} km of {neighborhood_name}"
+                )
 
     # ── 2. Attribute filters ──────────────────────────────────────────
     for f in plan.get("filters") or []:
@@ -201,6 +209,9 @@ def _buffer_neighborhood(
     distance_km: float,
 ):
     """Find neighborhoods within distance_km of a named neighborhood."""
+    # Clean any trailing JSON formatting characters from the LLM input
+    neighborhood_name = neighborhood_name.strip("}],'\" ")
+
     # Exact match first, then fuzzy
     source = full_gdf[
         full_gdf["ntaname"].str.lower() == neighborhood_name.lower()
@@ -227,6 +238,13 @@ def _buffer_neighborhood(
     gdf_metric = gdf.to_crs(METRIC_CRS)
     mask = gdf_metric.geometry.intersects(buffer_metric)
     result = gdf[mask].copy()
+
+    # Calculate distance from the centroid of the source neighborhood to the centroids of matched neighborhoods
+    source_centroid_metric = source_metric.centroid
+    result["distance_km"] = (
+        gdf_metric[mask].geometry.centroid.distance(source_centroid_metric) / 1000
+    ).round(2)
+    result = result.sort_values("distance_km")
 
     center_lat = source_geom.centroid.y
     center_lon = source_geom.centroid.x

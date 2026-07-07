@@ -66,6 +66,9 @@ if "drawn_features" not in st.session_state:
 if "last_query_result" not in st.session_state:
     st.session_state.last_query_result = None
 
+if "map_key_suffix" not in st.session_state:
+    st.session_state.map_key_suffix = 0
+
 # ── Sidebar ───────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("🗺️ SpatialRAG")
@@ -106,6 +109,7 @@ with st.sidebar:
         st.session_state.chat_history = []
         st.session_state.last_query_result = None
         st.session_state.drawn_features = []
+        st.session_state.map_key_suffix += 1
         st.rerun()
 
     st.markdown("---")
@@ -151,7 +155,7 @@ with map_col:
         m,
         use_container_width=True,
         height=550,
-        key="main_map",
+        key=f"main_map_{st.session_state.map_key_suffix}",
         returned_objects=["all_drawings"],
     )
 
@@ -172,6 +176,7 @@ with map_col:
         )
         if st.button("🗑️ Clear drawings", key="clear_draw_btn"):
             st.session_state.drawn_features = []
+            st.session_state.map_key_suffix += 1
             st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════

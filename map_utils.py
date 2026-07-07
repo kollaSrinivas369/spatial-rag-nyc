@@ -148,6 +148,7 @@ def create_base_map(
                     "fillOpacity": 0.1,
                     "dashArray": "5, 5",
                 },
+                interactive=False,
             ).add_to(m)
 
     # ── Query-center marker ───────────────────────────────────────────
@@ -170,6 +171,7 @@ def create_base_map(
                         "weight": 2,
                         "fillOpacity": 0.15,
                     },
+                    interactive=False,
                 ).add_to(m)
 
     # ── Draw tools ────────────────────────────────────────────────────
